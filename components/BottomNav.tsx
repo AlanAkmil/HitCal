@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { User, Camera, History, BarChart3, CodeXml } from "lucide-react";
-import { getProfile } from "@/lib/storage";
+import { getProfile, PROFILE_UPDATED_EVENT } from "@/lib/storage";
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -13,6 +13,12 @@ export default function BottomNav() {
   useEffect(() => {
     setHasProfile(!!getProfile());
   }, [pathname]);
+
+  useEffect(() => {
+    const onUpdate = () => setHasProfile(!!getProfile());
+    window.addEventListener(PROFILE_UPDATED_EVENT, onUpdate);
+    return () => window.removeEventListener(PROFILE_UPDATED_EVENT, onUpdate);
+  }, []);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
