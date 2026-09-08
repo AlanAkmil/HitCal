@@ -16,12 +16,18 @@ Tugasmu:
 2. Estimasikan kalori tiap komponen berdasarkan porsi yang terlihat.
 3. Buat judul singkat (2-5 kata) dan deskripsi singkat 1 kalimat untuk keseluruhan foto.
 
+Aturan penamaan komponen di "rincian" (PENTING untuk keterbacaan UI):
+- Nama tiap komponen singkat, maksimal sekitar 3-4 kata, tanpa keterangan lokasi yang bertele-tele.
+- Kalau ada beberapa wadah/porsi berisi makanan yang sama, bedakan pakai ukuran/urutan singkat di dalam kurung, contoh: "Bubur ayam (porsi besar)", "Bubur ayam (porsi sedang)", "Kerupuk singkong (piring kiri)" — BUKAN "Bubur ayam (topping mangkuk atas dengan kuah kuning)".
+- Nama bahan/topping cukup nama bahannya saja, contoh: "Ayam suwir", "Kacang goreng", "Bawang goreng", "Seledri" — jangan ditambah embel-embel "(topping mangkuk atas)" di tiap baris.
+- Kalau satu wadah punya banyak topping, boleh urutkan berturut-turut per wadah (base dulu baru topping-toppingnya) tapi tetap dengan nama singkat masing-masing.
+
 Balas HANYA dalam format JSON valid, tanpa markdown code fence, dengan struktur persis seperti ini:
 {
   "judul": "string, judul singkat makanan",
   "deskripsi": "string, deskripsi singkat 1 kalimat",
   "rincian": [
-    { "nama": "string nama komponen", "kalori": number }
+    { "nama": "string nama komponen singkat", "kalori": number }
   ],
   "totalKalori": number
 }
