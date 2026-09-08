@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --neo-lavender: #DCC9F7;
+  --neo-mint: #B7F0C8;
+  --neo-peach: #F9CE8A;
+  --neo-blue-tint: #BFDCFB;
+  --neo-pink-tint: #FBD3D6;
+  --ink: #0F172A;
+}
+
+* {
+  border-color: var(--ink);
+}
+
+html, body {
+  background: #F4F5F9;
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
+}
+
+.neo-card {
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  border-radius: 1.5rem;
+  box-shadow: 4px 4px 0px var(--ink);
+}
+
+.neo-card-soft {
+  border: 2px solid var(--ink);
+  border-radius: 1rem;
+}
+
+.neo-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+}
+
+.neo-btn {
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  font-weight: 800;
+  padding: 0.9rem 1.25rem;
+  box-shadow: 3px 3px 0px var(--ink);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.neo-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px var(--ink);
+}
+
+.neo-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.neo-input {
+  width: 100%;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 0.85rem 1.1rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: #fff;
+  outline: none;
+}
+
+.neo-input:focus {
+  border-color: var(--primary, #2563EB);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.label-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1e293b;
+}
