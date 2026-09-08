@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Gender, Goal, Profile, hitungBmi } from "@/lib/calc";
 import { saveProfile } from "@/lib/storage";
 
@@ -16,25 +15,57 @@ export default function ProfileForm({
   onSaved,
 }: {
   initial?: Profile | null;
-  onSaved?: () => void;
+  onSaved?: (profile: Profile) => void;
 }) {
-  const router = useRouter();
   const [nama, setNama] = useState(initial?.nama ?? "");
-  const [usia, setUsia] = useState(initial?.usia ?? 25);
+  const [usia, setUsia] = useState(initial ? String(initial.usia) : "25");
   const [gender, setGender] = useState<Gender>(initial?.gender ?? "wanita");
-  const [berat, setBerat] = useState(initial?.berat ?? 60);
-  const [tinggi, setTinggi] = useState(initial?.tinggi ?? 165);
+  const [berat, setBerat] = useState(initial ? String(initial.berat) : "60");
+  const [tinggi, setTinggi] = useState(initial ? String(initial.tinggi) : "165");
   const [tujuan, setTujuan] = useState<Goal>(initial?.tujuan ?? "stabilkan");
+  const [error, setError] = useState<string | null>(null);
 
-  const bmi = useMemo(() => hitungBmi(berat, tinggi), [berat, tinggi]);
+  const usiaNum = Number(usia) || 0;
+  const beratNum = Number(berat) || 0;
+  const tinggiNum = Number(tinggi) || 0;
+
+  const bmi = useMemo(
+    () => hitungBmi(beratNum || 1, tinggiNum || 1),
+    [beratNum, tinggiNum]
+  );
+
+  // Only allow digits while typing, so the field can be fully cleared
+  // (an empty string stays empty instead of snapping back to 0).
+  function handleNumberChange(setter: (v: string) => void) {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      const v = e.target.value;
+      if (v === "" || /^\d+$/.test(v)) setter(v);
+    };
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!nama.trim()) return;
-    const profile: Profile = { nama: nama.trim(), usia, gender, berat, tinggi, tujuan };
+    setError(null);
+
+    if (!nama.trim()) {
+      setError("Nama wajib diisi.");
+      return;
+    }
+    if (!usiaNum || !beratNum || !tinggiNum) {
+      setError("Usia, berat, dan tinggi badan wajib diisi dengan angka valid.");
+      return;
+    }
+
+    const profile: Profile = {
+      nama: nama.trim(),
+      usia: usiaNum,
+      gender,
+      berat: beratNum,
+      tinggi: tinggiNum,
+      tujuan,
+    };
     saveProfile(profile);
-    router.refresh();
-    onSaved?.();
+    onSaved?.(profile);
   }
 
   return (
@@ -68,12 +99,11 @@ export default function ProfileForm({
           <label className="block">
             <div className="mb-1 text-xs font-black uppercase tracking-wider text-slate-800">Usia</div>
             <input
-              type="number"
-              min={10}
-              max={100}
+              type="text"
+              inputMode="numeric"
               className="neo-input"
               value={usia}
-              onChange={(e) => setUsia(Number(e.target.value))}
+              onChange={handleNumberChange(setUsia)}
             />
           </label>
           <div className="block">
@@ -113,12 +143,11 @@ export default function ProfileForm({
               Berat Badan (kg)
             </div>
             <input
-              type="number"
-              min={20}
-              max={300}
+              type="text"
+              inputMode="numeric"
               className="neo-input"
               value={berat}
-              onChange={(e) => setBerat(Number(e.target.value))}
+              onChange={handleNumberChange(setBerat)}
             />
           </label>
           <label className="block">
@@ -126,12 +155,11 @@ export default function ProfileForm({
               Tinggi Badan (cm)
             </div>
             <input
-              type="number"
-              min={100}
-              max={250}
+              type="text"
+              inputMode="numeric"
               className="neo-input"
               value={tinggi}
-              onChange={(e) => setTinggi(Number(e.target.value))}
+              onChange={handleNumberChange(setTinggi)}
             />
           </label>
         </div>
@@ -171,6 +199,10 @@ export default function ProfileForm({
             ))}
           </div>
         </label>
+
+        {error && (
+          <p className="text-xs font-bold text-red-600 -mt-1">{error}</p>
+        )}
 
         <button
           type="submit"
