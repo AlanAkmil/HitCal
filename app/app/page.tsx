@@ -316,11 +316,16 @@ export default function FotoPage() {
                 </div>
 
                 {entry.rincian.length > 0 && (
-                  <div className="neo-card-soft mt-3 p-3 space-y-1.5">
+                  <div className="neo-card-soft mt-3 p-3 space-y-2">
                     {entry.rincian.map((item, i) => (
-                      <div key={i} className="flex justify-between text-sm font-semibold text-slate-800">
-                        <span>{item.nama}</span>
-                        <span>{formatKalori(item.kalori)} kalori</span>
+                      <div
+                        key={i}
+                        className="grid grid-cols-[1fr_auto] gap-x-3 items-baseline text-sm font-semibold text-slate-800"
+                      >
+                        <span className="leading-snug">{item.nama}</span>
+                        <span className="whitespace-nowrap text-slate-600 text-right">
+                          {formatKalori(item.kalori)} kalori
+                        </span>
                       </div>
                     ))}
                   </div>
