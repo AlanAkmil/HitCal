@@ -70,7 +70,10 @@ export default function ProfilePageClient() {
         <div className="order-2 md:order-1">
           <ProfileForm
             initial={profile ?? undefined}
-            onSaved={() => setEditing(false)}
+            onSaved={(saved) => {
+              setProfile(saved);
+              setEditing(false);
+            }}
           />
         </div>
       </div>
