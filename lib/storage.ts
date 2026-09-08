@@ -29,8 +29,11 @@ export function getProfile(): Profile | null {
   }
 }
 
+export const PROFILE_UPDATED_EVENT = "hitcal:profile-updated";
+
 export function saveProfile(profile: Profile): void {
   window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  window.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT));
 }
 
 export function getFoodLog(): FoodEntry[] {
