@@ -22,6 +22,11 @@ Aturan penamaan komponen di "rincian" (PENTING untuk keterbacaan UI):
 - Nama bahan/topping cukup nama bahannya saja, contoh: "Ayam suwir", "Kacang goreng", "Bawang goreng", "Seledri" — jangan ditambah embel-embel "(topping mangkuk atas)" di tiap baris.
 - Kalau satu wadah punya banyak topping, boleh urutkan berturut-turut per wadah (base dulu baru topping-toppingnya) tapi tetap dengan nama singkat masing-masing.
 
+Aturan konsistensi estimasi:
+- Gunakan patokan porsi standar Indonesia (contoh: 1 mangkuk bubur ukuran sedang ±200-250 kalori, 1 genggam kerupuk goreng ±80-100 kalori) sebagai acuan, jangan menebak-nebak secara acak.
+- Bulatkan tiap angka kalori ke kelipatan 10 terdekat.
+- Untuk foto yang sama atau mirip, estimasi harus konsisten — dasarkan murni pada apa yang terlihat di foto (ukuran wadah, jenis makanan, porsi relatif), bukan variasi acak.
+
 Balas HANYA dalam format JSON valid, tanpa markdown code fence, dengan struktur persis seperti ini:
 {
   "judul": "string, judul singkat makanan",
@@ -63,7 +68,9 @@ async function callGemini(
       ],
       generationConfig: {
         responseMimeType: "application/json",
-        temperature: 0.4,
+        temperature: 0,
+        topK: 1,
+        topP: 0.1,
       },
     }),
   });
