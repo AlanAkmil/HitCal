@@ -69,7 +69,7 @@ export default function DevPage() {
       </div>
 
       <h1 className="text-center text-[26px] font-black tracking-tight font-display">
-        Kuzuroken
+        Hidaka401
       </h1>
 
       <div
