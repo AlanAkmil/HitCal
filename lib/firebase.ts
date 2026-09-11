@@ -2,13 +2,18 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+// Firebase's web config is safe to ship in source — it's not a secret.
+// Firebase security is enforced by Security Rules on the server side, not
+// by hiding this config. Hardcoding it here sidesteps Vercel's dashboard
+// flagging NEXT_PUBLIC_-prefixed env vars as "sensitive", which was blocking
+// saving them there.
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyC7udBIEbvkvFLE7yfMVbwaqqzbZhvrK60",
+  authDomain: "hitcal-c336b.firebaseapp.com",
+  projectId: "hitcal-c336b",
+  storageBucket: "hitcal-c336b.firebasestorage.app",
+  messagingSenderId: "935978424230",
+  appId: "1:935978424230:web:dabe73939565b91bd4e167",
 };
 
 // Next.js re-runs this module on every hot-reload in dev; getApps() guards
