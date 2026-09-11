@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CircleHelp, UserCheck2 } from "lucide-react";
 import ProfileForm from "./ProfileForm";
+import AccountBar from "./AccountBar";
 import {
   Profile,
   goalLabel,
@@ -27,7 +28,9 @@ export default function ProfilePageClient() {
 
   if (!profile || editing) {
     return (
-      <div className="grid gap-6 md:grid-cols-2">
+      <div>
+        <AccountBar />
+        <div className="grid gap-6 md:grid-cols-2">
         <section className="space-y-5 order-1 md:order-2">
           <div
             className="neo-card relative overflow-hidden p-7"
@@ -76,6 +79,7 @@ export default function ProfilePageClient() {
             }}
           />
         </div>
+        </div>
       </div>
     );
   }
@@ -88,6 +92,7 @@ export default function ProfilePageClient() {
 
   return (
     <div className="space-y-6">
+      <AccountBar />
       <div
         className="neo-card relative overflow-hidden p-7"
         style={{ background: "var(--neo-peach)" }}
