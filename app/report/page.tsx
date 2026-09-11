@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import {
   Bar,
@@ -11,22 +11,18 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { getEntriesInRange, FoodEntry, getProfile } from "@/lib/storage";
-import { formatKalori, hitungBmr, hitungKebutuhanNormal, hitungTargetHarian, Profile } from "@/lib/calc";
+import { filterEntriesInRange, FoodEntry } from "@/lib/storage";
+import { formatKalori, hitungBmr, hitungKebutuhanNormal, hitungTargetHarian } from "@/lib/calc";
+import { useProfileData, useFoodLogData } from "@/lib/data-hooks";
 
 type RangeOpt = 7 | 30;
 
 export default function ReportPage() {
   const [range, setRange] = useState<RangeOpt>(7);
-  const [entries, setEntries] = useState<FoodEntry[]>([]);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    setEntries(getEntriesInRange(range));
-    setProfile(getProfile());
-    setLoaded(true);
-  }, [range]);
+  const { profile, loading: profileLoading } = useProfileData();
+  const { entries: allEntries, loading: entriesLoading } = useFoodLogData();
+  const entries = filterEntriesInRange(allEntries, range);
+  const loaded = !profileLoading && !entriesLoading;
 
   const target = profile
     ? hitungTargetHarian(hitungKebutuhanNormal(hitungBmr(profile)), profile.tujuan)
