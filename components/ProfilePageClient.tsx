@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CircleHelp, UserCheck2 } from "lucide-react";
 import ProfileForm from "./ProfileForm";
 import AccountBar from "./AccountBar";
 import {
-  Profile,
   goalLabel,
   hitungBmi,
   hitungBmr,
@@ -14,17 +13,13 @@ import {
   formatKalori,
   targetBeratSaran,
 } from "@/lib/calc";
-import { getProfile } from "@/lib/storage";
+import { useProfileData } from "@/lib/data-hooks";
 
 export default function ProfilePageClient() {
-  const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
+  const { profile, saveProfile, loading } = useProfileData();
   const [editing, setEditing] = useState(false);
 
-  useEffect(() => {
-    setProfile(getProfile());
-  }, []);
-
-  if (profile === undefined) return null;
+  if (loading) return null;
 
   if (!profile || editing) {
     return (
@@ -73,8 +68,8 @@ export default function ProfilePageClient() {
         <div className="order-2 md:order-1">
           <ProfileForm
             initial={profile ?? undefined}
-            onSaved={(saved) => {
-              setProfile(saved);
+            onSaved={async (saved) => {
+              await saveProfile(saved);
               setEditing(false);
             }}
           />
