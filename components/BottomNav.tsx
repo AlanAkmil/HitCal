@@ -23,6 +23,8 @@ export default function BottomNav() {
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
+  if (pathname === "/login") return null;
+
   const sideLinks = hasProfile
     ? [
         { href: "/", label: "Profil", icon: User },
