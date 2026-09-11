@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
+import { AuthProvider } from "@/lib/auth-context";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -29,12 +30,14 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className={`${jakarta.variable} ${grotesk.variable} font-sans`}>
-        <div className="flex min-h-dvh flex-col relative overflow-x-hidden pb-28">
-          <main className="mx-auto mt-6 w-full max-w-xl px-4 flex-1">
-            {children}
-          </main>
-        </div>
-        <BottomNav />
+        <AuthProvider>
+          <div className="flex min-h-dvh flex-col relative overflow-x-hidden pb-28">
+            <main className="mx-auto mt-6 w-full max-w-xl px-4 flex-1">
+              {children}
+            </main>
+          </div>
+          <BottomNav />
+        </AuthProvider>
       </body>
     </html>
   );
