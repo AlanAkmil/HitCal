@@ -76,5 +76,5 @@ export function getEntriesInRange(days: number): FoodEntry[] {
   const cutoff = new Date(now);
   cutoff.setDate(now.getDate() - (days - 1));
   cutoff.setHours(0, 0, 0, 0);
-  return getFoodLog().filter((e) => new Date(e.waktu) >= cutoff);
+  return getFoodLog().filter((e) => new Date(e.waktu) >= cutoff)
 }
