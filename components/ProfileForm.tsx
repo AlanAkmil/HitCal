@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { Gender, Goal, Profile, hitungBmi } from "@/lib/calc";
-import { saveProfile } from "@/lib/storage";
 
 const GOALS: { value: Goal; label: string }[] = [
   { value: "stabilkan", label: "Stabilkan" },
@@ -15,7 +14,7 @@ export default function ProfileForm({
   onSaved,
 }: {
   initial?: Profile | null;
-  onSaved?: (profile: Profile) => void;
+  onSaved?: (profile: Profile) => void | Promise<void>;
 }) {
   const [nama, setNama] = useState(initial?.nama ?? "");
   const [usia, setUsia] = useState(initial ? String(initial.usia) : "25");
@@ -24,6 +23,7 @@ export default function ProfileForm({
   const [tinggi, setTinggi] = useState(initial ? String(initial.tinggi) : "165");
   const [tujuan, setTujuan] = useState<Goal>(initial?.tujuan ?? "stabilkan");
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const usiaNum = Number(usia) || 0;
   const beratNum = Number(berat) || 0;
@@ -43,7 +43,7 @@ export default function ProfileForm({
     };
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
@@ -64,8 +64,15 @@ export default function ProfileForm({
       tinggi: tinggiNum,
       tujuan,
     };
-    saveProfile(profile);
-    onSaved?.(profile);
+
+    try {
+      setSaving(true);
+      await onSaved?.(profile);
+    } catch {
+      setError("Gagal nyimpen profil, coba lagi.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -206,9 +213,10 @@ export default function ProfileForm({
 
         <button
           type="submit"
+          disabled={saving}
           className="neo-btn mt-4 w-full text-base bg-primary text-white font-extrabold tracking-wide"
         >
-          Mulai Hitcal
+          {saving ? "Menyimpan..." : "Mulai Hitcal"}
         </button>
       </form>
     </section>
