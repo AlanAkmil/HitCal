@@ -35,11 +35,22 @@ function friendlyFirebaseError(code: string): string {
     "auth/email-already-in-use": "Email ini udah kepake. Coba masuk aja.",
     "auth/weak-password": "Password minimal 6 karakter.",
     "auth/popup-closed-by-user": "Popup Google ditutup sebelum selesai.",
+    "auth/popup-blocked": "Popup Google diblokir browser. Izinkan popup dulu.",
+    "auth/cancelled-popup-request": "Popup Google dibatalkan.",
+    "auth/unauthorized-domain": "Domain ini belum diizinkan di Firebase Console (Authentication > Settings > Authorized domains).",
+    "auth/operation-not-allowed": "Metode login ini belum diaktifin di Firebase Console.",
     "auth/invalid-phone-number": "Format nomor HP gak valid.",
     "auth/invalid-verification-code": "Kode OTP salah.",
+    "auth/code-expired": "Kode OTP udah kedaluwarsa, kirim ulang.",
+    "auth/quota-exceeded": "Kuota SMS harian abis. Coba lagi besok atau upgrade paket Firebase.",
+    "auth/captcha-check-failed": "Verifikasi reCAPTCHA gagal. Coba refresh halaman.",
+    "auth/invalid-app-credential": "Verifikasi reCAPTCHA gagal. Coba refresh halaman.",
+    "auth/missing-app-credential": "Verifikasi reCAPTCHA gagal. Coba refresh halaman.",
+    "auth/network-request-failed": "Koneksi internet bermasalah.",
     "auth/too-many-requests": "Kebanyakan percobaan. Coba lagi beberapa saat.",
   };
-  return map[code] ?? "Ada yang salah, coba lagi.";
+  const message = map[code] ?? "Ada yang salah, coba lagi.";
+  return code ? `${message} (${code})` : message;
 }
 
 export default function LoginPage() {
