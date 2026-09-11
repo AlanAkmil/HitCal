@@ -3,20 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Upload, Camera, Eye, Pencil, Trash2, Clock } from "lucide-react";
-import { Profile, hitungBmr, hitungKebutuhanNormal, hitungTargetHarian, formatKalori } from "@/lib/calc";
-import {
-  addFoodEntry,
-  deleteFoodEntry,
-  FoodEntry,
-  getProfile,
-  getTodayEntries,
-} from "@/lib/storage";
+import { hitungBmr, hitungKebutuhanNormal, hitungTargetHarian, formatKalori } from "@/lib/calc";
+import { FoodEntry, filterTodayEntries } from "@/lib/storage";
+import { useProfileData, useFoodLogData } from "@/lib/data-hooks";
 
 type AnalyzeState = "idle" | "uploading" | "analyzing" | "done" | "error";
 
 export default function FotoPage() {
-  const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
-  const [entries, setEntries] = useState<FoodEntry[]>([]);
+  const { profile, loading: profileLoading } = useProfileData();
+  const { entries: allEntries, addEntry, deleteEntry, loading: entriesLoading } = useFoodLogData();
+  const entries = filterTodayEntries(allEntries);
   const [state, setState] = useState<AnalyzeState>("idle");
   const [progress, setProgress] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -26,12 +22,7 @@ export default function FotoPage() {
   const uploadRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    setProfile(getProfile());
-    setEntries(getTodayEntries());
-  }, []);
-
-  if (profile === undefined) return null;
+  if (profileLoading || entriesLoading) return null;
 
   if (!profile) {
     return (
@@ -116,8 +107,7 @@ export default function FotoPage() {
         fotoDataUrl: dataUrl,
         waktu: new Date().toISOString(),
       };
-      addFoodEntry(entry);
-      setEntries(getTodayEntries());
+      await addEntry(entry);
       setState("done");
       setTimeout(() => {
         setState("idle");
@@ -133,9 +123,8 @@ export default function FotoPage() {
     }
   }
 
-  function handleDelete(id: string) {
-    deleteFoodEntry(id);
-    setEntries(getTodayEntries());
+  async function handleDelete(id: string) {
+    await deleteEntry(id);
   }
 
   const busy = state === "uploading" || state === "analyzing";
