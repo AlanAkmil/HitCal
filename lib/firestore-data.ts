@@ -8,8 +8,7 @@ import {
   orderBy,
   getDocs,
 } from "firebase/firestore";
-import { ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
-import { db, storage } from "./firebase";
+import { db } from "./firebase";
 import { Profile } from "./calc";
 import { FoodEntry } from "./storage";
 
@@ -29,29 +28,16 @@ export async function getFoodLogCloud(uid: string): Promise<FoodEntry[]> {
   return snap.docs.map((d) => d.data() as FoodEntry);
 }
 
-// Uploads the entry's base64 photo to Firebase Storage and swaps
-// fotoDataUrl to the resulting https download URL before writing the
-// Firestore document, so entry.fotoDataUrl always works as an <img src>
-// regardless of whether it's local (data:) or cloud (https:).
+// Storage requires the paid Blaze plan, so the photo's compressed base64
+// data URL (already resized to ~1280px / ~300KB by the Foto page before it
+// gets here) is stored directly on the Firestore document instead of a
+// separate Storage file. That comfortably fits under Firestore's 1MB
+// per-document limit while staying on the free Spark plan.
 export async function addFoodEntryCloud(uid: string, entry: FoodEntry): Promise<FoodEntry> {
-  let fotoDataUrl = entry.fotoDataUrl;
-
-  if (fotoDataUrl.startsWith("data:")) {
-    const storageRef = ref(storage, `users/${uid}/food/${entry.id}.jpg`);
-    await uploadString(storageRef, fotoDataUrl, "data_url");
-    fotoDataUrl = await getDownloadURL(storageRef);
-  }
-
-  const cloudEntry: FoodEntry = { ...entry, fotoDataUrl };
-  await setDoc(doc(db, "users", uid, "foodEntries", entry.id), cloudEntry);
-  return cloudEntry;
+  await setDoc(doc(db, "users", uid, "foodEntries", entry.id), entry);
+  return entry;
 }
 
 export async function deleteFoodEntryCloud(uid: string, id: string): Promise<void> {
   await deleteDoc(doc(db, "users", uid, "foodEntries", id));
-  try {
-    await deleteObject(ref(storage, `users/${uid}/food/${id}.jpg`));
-  } catch {
-    // Photo may not exist (e.g. entry created before cloud sync) — ignore.
-  }
 }
