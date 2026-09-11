@@ -67,14 +67,24 @@ export function isSameDay(iso: string, ref: Date = new Date()): boolean {
   );
 }
 
-export function getTodayEntries(): FoodEntry[] {
-  return getFoodLog().filter((e) => isSameDay(e.waktu));
+// Pure array filters — reusable whether the entries came from localStorage
+// or Firestore, so the cloud-sync data layer doesn't duplicate this logic.
+export function filterTodayEntries(entries: FoodEntry[]): FoodEntry[] {
+  return entries.filter((e) => isSameDay(e.waktu));
 }
 
-export function getEntriesInRange(days: number): FoodEntry[] {
+export function filterEntriesInRange(entries: FoodEntry[], days: number): FoodEntry[] {
   const now = new Date();
   const cutoff = new Date(now);
   cutoff.setDate(now.getDate() - (days - 1));
   cutoff.setHours(0, 0, 0, 0);
-  return getFoodLog().filter((e) => new Date(e.waktu) >= cutoff);
+  return entries.filter((e) => new Date(e.waktu) >= cutoff);
+}
+
+export function getTodayEntries(): FoodEntry[] {
+  return filterTodayEntries(getFoodLog());
+}
+
+export function getEntriesInRange(days: number): FoodEntry[] {
+  return filterEntriesInRange(getFoodLog(), days);
 }
