@@ -56,13 +56,22 @@ export default function FotoPage() {
 
   async function handleFile(file: File) {
     setErrorMsg(null);
-    const dataUrl = await fileToDataUrl(file);
-    setPreviewUrl(dataUrl);
     setState("uploading");
-    setProgress(15);
+    setProgress(10);
+
+    let dataUrl: string;
+    try {
+      dataUrl = await fileToCompressedDataUrl(file);
+    } catch (err) {
+      setErrorMsg("Gagal memproses foto. Coba pilih foto lain.");
+      setState("error");
+      return;
+    }
+    setPreviewUrl(dataUrl);
+    setProgress(25);
 
     const base64 = dataUrl.split(",")[1];
-    const mimeType = file.type || "image/jpeg";
+    const mimeType = "image/jpeg";
 
     setState("analyzing");
     const progressTimer = setInterval(() => {
@@ -75,7 +84,20 @@ export default function FotoPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: base64, mimeType }),
       });
-      const data = await res.json();
+
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        clearInterval(progressTimer);
+        setErrorMsg(
+          res.status === 413
+            ? "Foto masih kegedean buat di-upload. Coba foto lain."
+            : `Server gak ngasih respons yang bener (status ${res.status}). Coba lagi.`
+        );
+        setState("error");
+        return;
+      }
       clearInterval(progressTimer);
 
       if (!res.ok) {
@@ -104,7 +126,9 @@ export default function FotoPage() {
       }, 900);
     } catch (err) {
       clearInterval(progressTimer);
-      setErrorMsg("Terjadi kesalahan jaringan. Coba lagi.");
+      setErrorMsg(
+        "Gagal terhubung ke server. Cek koneksi internet kamu dan coba lagi."
+      );
       setState("error");
     }
   }
@@ -348,10 +372,47 @@ export default function FotoPage() {
   );
 }
 
-function fileToDataUrl(file: File): Promise<string> {
+// Resizes + re-compresses the photo client-side before it ever leaves the
+// browser. Phone camera photos are easily 5-10MB+, well past Vercel's
+// ~4.5MB request body limit — sending one raw causes the request to get
+// cut off, which shows up client-side as a generic "network error" even
+// though the connection itself is fine. Capping the longest side at 1280px
+// and re-encoding as JPEG keeps payloads small (usually under ~300KB) and
+// uploads noticeably faster too.
+function fileToCompressedDataUrl(
+  file: File,
+  maxDim = 1280,
+  quality = 0.82
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
+    reader.onload = () => {
+      const img = new window.Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width >= height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Canvas gak didukung di browser ini."));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => reject(new Error("Gagal membaca gambar."));
+      img.src = reader.result as string;
+    };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
