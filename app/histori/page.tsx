@@ -1,21 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Trash2, Clock } from "lucide-react";
-import { deleteFoodEntry, FoodEntry, getFoodLog } from "@/lib/storage";
+import { FoodEntry } from "@/lib/storage";
 import { formatKalori } from "@/lib/calc";
+import { useFoodLogData } from "@/lib/data-hooks";
 
 export default function HistoriPage() {
-  const [entries, setEntries] = useState<FoodEntry[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const { entries, deleteEntry, loading } = useFoodLogData();
 
-  useEffect(() => {
-    setEntries(getFoodLog());
-    setLoaded(true);
-  }, []);
-
-  if (!loaded) return null;
+  if (loading) return null;
 
   if (entries.length === 0) {
     return (
@@ -60,10 +54,7 @@ export default function HistoriPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => {
-                    deleteFoodEntry(entry.id);
-                    setEntries(getFoodLog());
-                  }}
+                  onClick={() => deleteEntry(entry.id)}
                   className="h-9 w-9 shrink-0 rounded-full border-2 border-slate-900 flex items-center justify-center self-center"
                   style={{ background: "var(--neo-pink-tint)" }}
                 >
