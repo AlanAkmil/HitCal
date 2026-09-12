@@ -2,11 +2,12 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Upload, Camera, Eye, Trash2, Clock } from "lucide-react";
+import { Upload, Camera } from "lucide-react";
 import { hitungBmr, hitungKebutuhanNormal, hitungTargetHarian, formatKalori } from "@/lib/calc";
 import { FoodEntry, filterTodayEntries } from "@/lib/storage";
 import { useAppData } from "@/lib/data-provider";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import FoodEntryCard from "@/components/FoodEntryCard";
 
 type AnalyzeState = "idle" | "uploading" | "analyzing" | "done" | "error";
 
@@ -16,6 +17,7 @@ export default function FotoPage() {
     profileLoading,
     entries: allEntries,
     addEntry,
+    updateEntry,
     deleteEntry,
     entriesLoading,
   } = useAppData();
@@ -296,61 +298,13 @@ export default function FotoPage() {
         ) : (
           <div className="mt-4 space-y-4">
             {entries.map((entry) => (
-              <div key={entry.id} className="neo-card p-4">
-                <div className="relative">
-                  <img
-                    src={entry.fotoDataUrl}
-                    alt={entry.judul}
-                    className="w-full object-cover max-h-56 rounded-2xl border-2 border-slate-900"
-                  />
-                  <button
-                    onClick={() => setPreviewModal(entry.fotoDataUrl)}
-                    className="absolute bottom-2 right-2 h-8 w-8 rounded-full bg-white border-2 border-slate-900 flex items-center justify-center"
-                  >
-                    <Eye size={16} />
-                  </button>
-                </div>
-
-                <div className="mt-3 flex items-start justify-between gap-2">
-                  <div className="font-black text-lg text-slate-900 leading-tight">
-                    {entry.judul}
-                  </div>
-                  <span className="neo-badge shrink-0 flex items-center gap-1 bg-white text-[10px]">
-                    <Clock size={12} /> {formatTime(entry.waktu)}
-                  </span>
-                </div>
-                <p className="text-xs font-medium text-slate-600 mt-1">{entry.deskripsi}</p>
-
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="text-2xl font-black text-slate-900">
-                    {formatKalori(entry.totalKalori)}{" "}
-                    <span className="text-xs text-slate-500">Kalori</span>
-                  </div>
-                  <button
-                    onClick={() => handleDelete(entry.id)}
-                    className="h-9 w-9 rounded-full border-2 border-slate-900 flex items-center justify-center"
-                    style={{ background: "var(--neo-pink-tint)" }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-
-                {entry.rincian.length > 0 && (
-                  <div className="neo-card-soft mt-3 p-3 space-y-2">
-                    {entry.rincian.map((item, i) => (
-                      <div
-                        key={i}
-                        className="grid grid-cols-[1fr_auto] gap-x-3 items-baseline text-sm font-semibold text-slate-800"
-                      >
-                        <span className="leading-snug">{item.nama}</span>
-                        <span className="whitespace-nowrap text-slate-600 text-right">
-                          {formatKalori(item.kalori)} kalori
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <FoodEntryCard
+                key={entry.id}
+                entry={entry}
+                onUpdate={updateEntry}
+                onDelete={handleDelete}
+                onPreview={setPreviewModal}
+              />
             ))}
           </div>
         )}
@@ -417,12 +371,4 @@ function fileToCompressedDataUrl(
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-}
-
-function formatTime(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getHours().toString().padStart(2, "0")}:${d
-    .getMinutes()
-    .toString()
-    .padStart(2, "0")} WIB`;
 }
