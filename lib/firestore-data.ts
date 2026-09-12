@@ -38,6 +38,14 @@ export async function addFoodEntryCloud(uid: string, entry: FoodEntry): Promise<
   return entry;
 }
 
+// setDoc overwrites the whole document, so editing an entry is the same
+// write as creating one — kept as a separate export just for clearer
+// intent at the call site.
+export async function updateFoodEntryCloud(uid: string, entry: FoodEntry): Promise<FoodEntry> {
+  await setDoc(doc(db, "users", uid, "foodEntries", entry.id), entry);
+  return entry;
+}
+
 export async function deleteFoodEntryCloud(uid: string, id: string): Promise<void> {
   await deleteDoc(doc(db, "users", uid, "foodEntries", id));
 }
