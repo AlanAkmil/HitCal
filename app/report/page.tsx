@@ -50,7 +50,7 @@ export default function ReportPage() {
 
       <button
         onClick={() => window.print()}
-        className="neo-btn w-full flex items-center justify-center gap-2 bg-primary text-white"
+        className="neo-btn w-full flex items-center justify-center gap-2 bg-primary text-white print:hidden"
       >
         <Download size={18} /> Export Laporan PDF
       </button>
