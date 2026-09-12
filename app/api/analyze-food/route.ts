@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-// Coba model utama dulu; kalau overload (503) atau not-found (404),
-// otomatis jatuh ke model cadangan berikutnya.
-const MODEL_CHAIN = ["gemini-flash-latest", "gemini-2.5-flash"];
+// Coba model Gemini utama dulu; kalau overload (503) atau not-found (404),
+// otomatis jatuh ke model cadangan berikutnya. Kalau seluruh chain Gemini
+// gagal, baru dicoba sekali lagi lewat Groq (qwen3.8-27b) sebagai fallback
+// terakhir sebelum benar-benar menyerah.
+const GEMINI_MODEL_CHAIN = ["gemini-flash-latest", "gemini-2.5-flash"];
+const GROQ_MODEL = "qwen/qwen3.8-27b";
 
 const MAX_RETRIES_PER_MODEL = 2;
 const RETRY_DELAY_MS = 1200;
@@ -43,7 +46,23 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function buildUrl(model: string) {
+// Parses the model's raw JSON text and recomputes totalKalori from the
+// rincian list server-side — never trust the model's own arithmetic, so
+// the total always matches exactly what's shown in the UI breakdown.
+function buildEntryJson(rawText: string) {
+  const cleaned = rawText.replace(/```json|```/g, "").trim();
+  const parsed = JSON.parse(cleaned);
+  const rincian = Array.isArray(parsed.rincian) ? parsed.rincian : [];
+  const totalKalori = rincian.reduce(
+    (sum: number, item: any) => sum + (Number(item?.kalori) || 0),
+    0
+  );
+  return { ...parsed, rincian, totalKalori };
+}
+
+// ===== Gemini =====
+
+function geminiUrl(model: string) {
   return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 }
 
@@ -53,7 +72,7 @@ async function callGemini(
   imageBase64: string,
   mimeType: string
 ): Promise<{ ok: true; text: string } | { ok: false; status: number; errText: string }> {
-  const res = await fetch(`${buildUrl(model)}?key=${apiKey}`, {
+  const res = await fetch(`${geminiUrl(model)}?key=${apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -97,9 +116,115 @@ function shouldFallbackModel(status: number) {
   return status === 503 || status === 429 || status === 404;
 }
 
+async function tryGeminiChain(
+  apiKey: string,
+  imageBase64: string,
+  mimeType: string
+): Promise<
+  { ok: true; json: any } | { ok: false; status: number; errText: string }
+> {
+  let lastError: { status: number; errText: string } = {
+    status: 502,
+    errText: "Gemini tidak merespons.",
+  };
+
+  for (const model of GEMINI_MODEL_CHAIN) {
+    for (let attempt = 0; attempt <= MAX_RETRIES_PER_MODEL; attempt++) {
+      try {
+        const result = await callGemini(model, apiKey, imageBase64, mimeType);
+
+        if (result.ok) {
+          try {
+            return { ok: true, json: buildEntryJson(result.text) };
+          } catch {
+            console.error("Gagal parse JSON dari Gemini:", result.text);
+            return {
+              ok: false,
+              status: 502,
+              errText: "Gemini mengembalikan format yang tidak terbaca.",
+            };
+          }
+        }
+
+        lastError = { status: result.status, errText: result.errText };
+        console.error(`Gemini API error (model=${model}, attempt=${attempt}):`, result.errText);
+
+        if (isRetryable(result.status) && attempt < MAX_RETRIES_PER_MODEL) {
+          await sleep(RETRY_DELAY_MS * (attempt + 1));
+          continue;
+        }
+
+        if (shouldFallbackModel(result.status)) {
+          break; // lanjut ke model berikutnya di GEMINI_MODEL_CHAIN
+        }
+
+        // Error lain (400/403/dst) — gak akan membaik dengan retry/fallback.
+        return { ok: false, status: result.status, errText: result.errText };
+      } catch (err) {
+        console.error("Gemini network error:", err);
+        lastError = { status: 500, errText: String(err) };
+        if (attempt < MAX_RETRIES_PER_MODEL) {
+          await sleep(RETRY_DELAY_MS * (attempt + 1));
+        }
+      }
+    }
+  }
+
+  return { ok: false, ...lastError };
+}
+
+// ===== Groq (fallback) =====
+
+async function callGroq(
+  apiKey: string,
+  imageBase64: string,
+  mimeType: string
+): Promise<{ ok: true; json: any } | { ok: false; errText: string }> {
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        temperature: 0,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: SYSTEM_PROMPT },
+              { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      return { ok: false, errText };
+    }
+
+    const data = await res.json();
+    const text: string | undefined = data?.choices?.[0]?.message?.content;
+    if (!text) {
+      return { ok: false, errText: "Respons kosong dari Groq." };
+    }
+
+    return { ok: true, json: buildEntryJson(text) };
+  } catch (err) {
+    return { ok: false, errText: String(err) };
+  }
+}
+
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const groqKey = process.env.GROQ_API_KEY;
+
+  if (!geminiKey) {
     return NextResponse.json(
       { error: "GEMINI_API_KEY belum diatur di environment variables." },
       { status: 500 }
@@ -118,70 +243,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Request tidak valid." }, { status: 400 });
   }
 
-  let lastError: { status: number; errText: string } | null = null;
-
-  for (const model of MODEL_CHAIN) {
-    for (let attempt = 0; attempt <= MAX_RETRIES_PER_MODEL; attempt++) {
-      try {
-        const result = await callGemini(model, apiKey, imageBase64, mimeType);
-
-        if (result.ok) {
-          try {
-            const cleaned = result.text.replace(/```json|```/g, "").trim();
-            const parsed = JSON.parse(cleaned);
-
-            // Trust the per-item breakdown, not Gemini's own arithmetic —
-            // recompute totalKalori server-side so it's always exactly
-            // consistent with the rincian list shown in the UI.
-            const rincian = Array.isArray(parsed.rincian) ? parsed.rincian : [];
-            const totalKalori = rincian.reduce(
-              (sum: number, item: any) => sum + (Number(item?.kalori) || 0),
-              0
-            );
-
-            return NextResponse.json({ ...parsed, rincian, totalKalori });
-          } catch (parseErr) {
-            console.error("Gagal parse JSON dari Gemini:", result.text);
-            return NextResponse.json(
-              { error: "Gemini mengembalikan format yang tidak terbaca." },
-              { status: 502 }
-            );
-          }
-        }
-
-        lastError = { status: result.status, errText: result.errText };
-        console.error(`Gemini API error (model=${model}, attempt=${attempt}):`, result.errText);
-
-        if (isRetryable(result.status) && attempt < MAX_RETRIES_PER_MODEL) {
-          await sleep(RETRY_DELAY_MS * (attempt + 1));
-          continue;
-        }
-
-        if (shouldFallbackModel(result.status)) {
-          break; // lanjut ke model berikutnya di MODEL_CHAIN
-        }
-
-        // Error lain (400/403/dst) — gak akan membaik dengan retry/fallback, langsung berhenti.
-        return NextResponse.json(
-          { error: "Gagal menghubungi Gemini API." },
-          { status: 502 }
-        );
-      } catch (err) {
-        console.error("Analyze food network error:", err);
-        lastError = { status: 500, errText: String(err) };
-        if (attempt < MAX_RETRIES_PER_MODEL) {
-          await sleep(RETRY_DELAY_MS * (attempt + 1));
-        }
-      }
-    }
+  const geminiResult = await tryGeminiChain(geminiKey, imageBase64, mimeType);
+  if (geminiResult.ok) {
+    return NextResponse.json(geminiResult.json);
   }
 
-  const overloaded = lastError?.status === 503 || lastError?.status === 429;
+  console.error("Semua model Gemini gagal, coba fallback ke Groq:", geminiResult.errText);
+
+  if (groqKey) {
+    const groqResult = await callGroq(groqKey, imageBase64, mimeType);
+    if (groqResult.ok) {
+      return NextResponse.json(groqResult.json);
+    }
+    console.error("Groq fallback juga gagal:", groqResult.errText);
+  }
+
+  const overloaded = geminiResult.status === 503 || geminiResult.status === 429;
   return NextResponse.json(
     {
       error: overloaded
-        ? "Server Gemini lagi sibuk banget nih. Coba upload ulang beberapa saat lagi."
-        : "Gagal menghubungi Gemini API.",
+        ? "Server AI lagi sibuk banget nih. Coba upload ulang beberapa saat lagi."
+        : "Gagal menganalisis foto lewat Gemini maupun Groq.",
     },
     { status: 502 }
   );
