@@ -63,8 +63,15 @@ export async function POST(req: NextRequest) {
     if (!res.ok) {
       const errText = await res.text();
       console.error("Groq chat error:", errText);
+      let detail = errText;
+      try {
+        const parsedErr = JSON.parse(errText);
+        detail = parsedErr?.error?.message ?? errText;
+      } catch {
+        // errText wasn't JSON, use as-is
+      }
       return NextResponse.json(
-        { error: "HidakaAi lagi gangguan, coba lagi bentar ya." },
+        { error: `HidakaAi lagi gangguan (${res.status}): ${detail}` },
         { status: 502 }
       );
     }
