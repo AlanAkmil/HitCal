@@ -13,14 +13,14 @@ import {
 } from "recharts";
 import { filterEntriesInRange, FoodEntry } from "@/lib/storage";
 import { formatKalori, hitungBmr, hitungKebutuhanNormal, hitungTargetHarian } from "@/lib/calc";
-import { useProfileData, useFoodLogData } from "@/lib/data-hooks";
+import { useAppData } from "@/lib/data-provider";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 type RangeOpt = 7 | 30;
 
 export default function ReportPage() {
   const [range, setRange] = useState<RangeOpt>(7);
-  const { profile, loading: profileLoading } = useProfileData();
-  const { entries: allEntries, loading: entriesLoading } = useFoodLogData();
+  const { profile, profileLoading, entries: allEntries, entriesLoading } = useAppData();
   const entries = filterEntriesInRange(allEntries, range);
   const loaded = !profileLoading && !entriesLoading;
 
@@ -35,7 +35,7 @@ export default function ReportPage() {
   const rataRata = hariAktif > 0 ? Math.round(totalKalori / hariAktif) : 0;
   const vsTarget = target > 0 ? Math.round((rataRata / target) * 100) : 0;
 
-  if (!loaded) return null;
+  if (!loaded) return <LoadingSpinner />;
 
   const { start, end } = rangeLabel(range);
 
