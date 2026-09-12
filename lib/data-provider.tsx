@@ -46,27 +46,28 @@ const DataContext = createContext<DataContextValue | null>(null);
 // on a slow connection.
 export function DataProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
+  const uid = user?.uid;
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
   const [entries, setEntries] = useState<FoodEntry[]>([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
 
   const loadProfile = useCallback(async () => {
-    if (user) {
-      setProfile(await getProfileCloud(user.uid));
+    if (uid) {
+      setProfile(await getProfileCloud(uid));
     } else {
       setProfile(getProfileLocal());
     }
-  }, [user]);
+  }, [uid]);
 
   const loadEntries = useCallback(async () => {
     setEntriesLoading(true);
-    if (user) {
-      setEntries(await getFoodLogCloud(user.uid));
+    if (uid) {
+      setEntries(await getFoodLogCloud(uid));
     } else {
       setEntries(getFoodLogLocal());
     }
     setEntriesLoading(false);
-  }, [user]);
+  }, [uid]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -74,42 +75,42 @@ export function DataProvider({ children }: { children: ReactNode }) {
     loadProfile();
     loadEntries();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, user]);
+  }, [authLoading, uid]);
 
   const saveProfile = useCallback(
     async (p: Profile) => {
-      if (user) {
-        await saveProfileCloud(user.uid, p);
+      if (uid) {
+        await saveProfileCloud(uid, p);
       } else {
         saveProfileLocal(p);
       }
       setProfile(p);
     },
-    [user]
+    [uid]
   );
 
   const addEntry = useCallback(
     async (entry: FoodEntry) => {
-      if (user) {
-        await addFoodEntryCloud(user.uid, entry);
+      if (uid) {
+        await addFoodEntryCloud(uid, entry);
       } else {
         addFoodEntryLocal(entry);
       }
       await loadEntries();
     },
-    [user, loadEntries]
+    [uid, loadEntries]
   );
 
   const deleteEntry = useCallback(
     async (id: string) => {
-      if (user) {
-        await deleteFoodEntryCloud(user.uid, id);
+      if (uid) {
+        await deleteFoodEntryCloud(uid, id);
       } else {
         deleteFoodEntryLocal(id);
       }
       await loadEntries();
     },
-    [user, loadEntries]
+    [uid, loadEntries]
   );
 
   return (
