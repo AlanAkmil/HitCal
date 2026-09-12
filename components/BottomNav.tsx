@@ -32,7 +32,7 @@ export default function BottomNav() {
   const gridCols = hasProfile ? "grid-cols-5" : "grid-cols-3";
 
   return (
-    <div className="fixed bottom-0 sm:bottom-6 left-0 right-0 mx-auto w-full sm:w-[92%] sm:max-w-[460px] z-40 px-0 sm:px-2">
+    <div className="fixed bottom-0 sm:bottom-6 left-0 right-0 mx-auto w-full sm:w-[92%] sm:max-w-[460px] z-40 px-0 sm:px-2 print:hidden">
       <nav
         className={`relative grid h-[68px] sm:h-[66px] w-full items-center rounded-none sm:rounded-full border-t-2.5 sm:border-2.5 border-x-0 sm:border-x-2.5 border-b-0 sm:border-b-2.5 border-slate-900 bg-white/98 sm:bg-white/95 px-2 pb-1 sm:pb-0 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] sm:shadow-[0_10px_30px_rgba(0,0,0,0.15),4px_4px_0px_#0f172a] backdrop-blur-xl ${gridCols}`}
       >
