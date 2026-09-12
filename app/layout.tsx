@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
+import HidakaChatWidget from "@/components/HidakaChatWidget";
 import { AuthProvider } from "@/lib/auth-context";
 import { DataProvider } from "@/lib/data-provider";
 
@@ -39,6 +40,7 @@ export default function RootLayout({
               </main>
             </div>
             <BottomNav />
+            <HidakaChatWidget />
           </DataProvider>
         </AuthProvider>
       </body>
