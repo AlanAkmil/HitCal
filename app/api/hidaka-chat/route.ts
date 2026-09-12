@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: GROQ_MODEL,
         temperature: 0.6,
+        max_tokens: 400,
         messages: [{ role: "system", content: systemPrompt }, ...messages],
       }),
     });
