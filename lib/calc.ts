@@ -92,3 +92,11 @@ export function targetBeratSaran(profile: Profile): number {
   if (profile.tujuan === "naikkan") return Math.max(profile.berat + 5, idealBerat);
   return idealBerat;
 }
+
+export function formatTime(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getHours().toString().padStart(2, "0")}:${d
+    .getMinutes()
+    .toString()
+    .padStart(2, "0")} WIB`;
+}
