@@ -16,6 +16,7 @@ import {
   saveProfile as saveProfileLocal,
   getFoodLog as getFoodLogLocal,
   addFoodEntry as addFoodEntryLocal,
+  updateFoodEntry as updateFoodEntryLocal,
   deleteFoodEntry as deleteFoodEntryLocal,
 } from "./storage";
 import {
@@ -23,6 +24,7 @@ import {
   saveProfileCloud,
   getFoodLogCloud,
   addFoodEntryCloud,
+  updateFoodEntryCloud,
   deleteFoodEntryCloud,
 } from "./firestore-data";
 
@@ -33,6 +35,7 @@ interface DataContextValue {
   entries: FoodEntry[];
   entriesLoading: boolean;
   addEntry: (e: FoodEntry) => Promise<void>;
+  updateEntry: (e: FoodEntry) => Promise<void>;
   deleteEntry: (id: string) => Promise<void>;
   refreshEntries: () => Promise<void>;
 }
@@ -101,6 +104,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [uid, loadEntries]
   );
 
+  const updateEntry = useCallback(
+    async (entry: FoodEntry) => {
+      if (uid) {
+        await updateFoodEntryCloud(uid, entry);
+      } else {
+        updateFoodEntryLocal(entry);
+      }
+      await loadEntries();
+    },
+    [uid, loadEntries]
+  );
+
   const deleteEntry = useCallback(
     async (id: string) => {
       if (uid) {
@@ -122,6 +137,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         entries,
         entriesLoading: authLoading || entriesLoading,
         addEntry,
+        updateEntry,
         deleteEntry,
         refreshEntries: loadEntries,
       }}
