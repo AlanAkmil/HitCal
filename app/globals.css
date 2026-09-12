@@ -93,3 +93,14 @@ h1, h2, h3, .font-display {
   text-transform: uppercase;
   color: #1e293b;
 }
+
+@media print {
+  body {
+    background: #fff !important;
+  }
+  .neo-card,
+  .neo-card-soft {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+}
