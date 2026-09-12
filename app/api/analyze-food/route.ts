@@ -129,7 +129,17 @@ export async function POST(req: NextRequest) {
           try {
             const cleaned = result.text.replace(/```json|```/g, "").trim();
             const parsed = JSON.parse(cleaned);
-            return NextResponse.json(parsed);
+
+            // Trust the per-item breakdown, not Gemini's own arithmetic —
+            // recompute totalKalori server-side so it's always exactly
+            // consistent with the rincian list shown in the UI.
+            const rincian = Array.isArray(parsed.rincian) ? parsed.rincian : [];
+            const totalKalori = rincian.reduce(
+              (sum: number, item: any) => sum + (Number(item?.kalori) || 0),
+              0
+            );
+
+            return NextResponse.json({ ...parsed, rincian, totalKalori });
           } catch (parseErr) {
             console.error("Gagal parse JSON dari Gemini:", result.text);
             return NextResponse.json(
