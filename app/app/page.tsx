@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { Upload, Camera, Eye, Pencil, Trash2, Clock } from "lucide-react";
+import { Upload, Camera, Eye, Trash2, Clock } from "lucide-react";
 import { hitungBmr, hitungKebutuhanNormal, hitungTargetHarian, formatKalori } from "@/lib/calc";
 import { FoodEntry, filterTodayEntries } from "@/lib/storage";
 import { useAppData } from "@/lib/data-provider";
@@ -361,7 +361,12 @@ export default function FotoPage() {
           className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-6"
           onClick={() => setPreviewModal(null)}
         >
-          <img src={previewModal} alt="Preview" className="max-h-full rounded-2xl border-2 border-white" />
+          <img
+            src={previewModal}
+            alt="Preview"
+            className="max-h-full rounded-2xl border-2 border-white"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
