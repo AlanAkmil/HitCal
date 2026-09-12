@@ -4,12 +4,13 @@ import Link from "next/link";
 import { Trash2, Clock } from "lucide-react";
 import { FoodEntry } from "@/lib/storage";
 import { formatKalori } from "@/lib/calc";
-import { useFoodLogData } from "@/lib/data-hooks";
+import { useAppData } from "@/lib/data-provider";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 export default function HistoriPage() {
-  const { entries, deleteEntry, loading } = useFoodLogData();
+  const { entries, deleteEntry, entriesLoading: loading } = useAppData();
 
-  if (loading) return null;
+  if (loading) return <LoadingSpinner />;
 
   if (entries.length === 0) {
     return (
