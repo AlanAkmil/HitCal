@@ -29,11 +29,8 @@ export function getProfile(): Profile | null {
   }
 }
 
-export const PROFILE_UPDATED_EVENT = "hitcal:profile-updated";
-
 export function saveProfile(profile: Profile): void {
   window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-  window.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT));
 }
 
 export function getFoodLog(): FoodEntry[] {
@@ -79,12 +76,4 @@ export function filterEntriesInRange(entries: FoodEntry[], days: number): FoodEn
   cutoff.setDate(now.getDate() - (days - 1));
   cutoff.setHours(0, 0, 0, 0);
   return entries.filter((e) => new Date(e.waktu) >= cutoff);
-}
-
-export function getTodayEntries(): FoodEntry[] {
-  return filterTodayEntries(getFoodLog());
-}
-
-export function getEntriesInRange(days: number): FoodEntry[] {
-  return filterEntriesInRange(getFoodLog(), days);
 }
