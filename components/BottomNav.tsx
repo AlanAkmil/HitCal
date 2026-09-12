@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { User, Camera, History, BarChart3, CodeXml } from "lucide-react";
-import { useProfileData } from "@/lib/data-hooks";
+import { useAppData } from "@/lib/data-provider";
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const { profile } = useProfileData();
+  const { profile } = useAppData();
   const hasProfile = !!profile;
 
   const isActive = (href: string) =>
