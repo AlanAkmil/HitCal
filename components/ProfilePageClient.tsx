@@ -13,13 +13,14 @@ import {
   formatKalori,
   targetBeratSaran,
 } from "@/lib/calc";
-import { useProfileData } from "@/lib/data-hooks";
+import { useAppData } from "@/lib/data-provider";
+import LoadingSpinner from "./LoadingSpinner";
 
 export default function ProfilePageClient() {
-  const { profile, saveProfile, loading } = useProfileData();
+  const { profile, saveProfile, profileLoading: loading } = useAppData();
   const [editing, setEditing] = useState(false);
 
-  if (loading) return null;
+  if (loading) return <LoadingSpinner />;
 
   if (!profile || editing) {
     return (
