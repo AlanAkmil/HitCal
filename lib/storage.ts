@@ -50,6 +50,11 @@ export function addFoodEntry(entry: FoodEntry): void {
   window.localStorage.setItem(FOODLOG_KEY, JSON.stringify(log));
 }
 
+export function updateFoodEntry(entry: FoodEntry): void {
+  const log = getFoodLog().map((e) => (e.id === entry.id ? entry : e));
+  window.localStorage.setItem(FOODLOG_KEY, JSON.stringify(log));
+}
+
 export function deleteFoodEntry(id: string): void {
   const log = getFoodLog().filter((e) => e.id !== id);
   window.localStorage.setItem(FOODLOG_KEY, JSON.stringify(log));
