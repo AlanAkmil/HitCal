@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Trash2, Clock } from "lucide-react";
 import { FoodEntry } from "@/lib/storage";
-import { formatKalori } from "@/lib/calc";
+import { formatKalori, formatTime } from "@/lib/calc";
 import { useAppData } from "@/lib/data-provider";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -84,12 +84,4 @@ function groupByDate(entries: FoodEntry[]): Record<string, FoodEntry[]> {
     groups[key].push(e);
   }
   return groups;
-}
-
-function formatTime(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getHours().toString().padStart(2, "0")}:${d
-    .getMinutes()
-    .toString()
-    .padStart(2, "0")} WIB`;
 }
