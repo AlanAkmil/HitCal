@@ -5,13 +5,20 @@ import Link from "next/link";
 import { Upload, Camera, Eye, Pencil, Trash2, Clock } from "lucide-react";
 import { hitungBmr, hitungKebutuhanNormal, hitungTargetHarian, formatKalori } from "@/lib/calc";
 import { FoodEntry, filterTodayEntries } from "@/lib/storage";
-import { useProfileData, useFoodLogData } from "@/lib/data-hooks";
+import { useAppData } from "@/lib/data-provider";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 type AnalyzeState = "idle" | "uploading" | "analyzing" | "done" | "error";
 
 export default function FotoPage() {
-  const { profile, loading: profileLoading } = useProfileData();
-  const { entries: allEntries, addEntry, deleteEntry, loading: entriesLoading } = useFoodLogData();
+  const {
+    profile,
+    profileLoading,
+    entries: allEntries,
+    addEntry,
+    deleteEntry,
+    entriesLoading,
+  } = useAppData();
   const entries = filterTodayEntries(allEntries);
   const [state, setState] = useState<AnalyzeState>("idle");
   const [progress, setProgress] = useState(0);
@@ -22,7 +29,7 @@ export default function FotoPage() {
   const uploadRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
-  if (profileLoading || entriesLoading) return null;
+  if (profileLoading || entriesLoading) return <LoadingSpinner />;
 
   if (!profile) {
     return (
